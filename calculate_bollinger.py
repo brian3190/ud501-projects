@@ -1,6 +1,12 @@
 import os
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
+
+def get_bollinger_bands(rm, rstd):
+    """Return upper and lower Bollinger Bands."""
+    upper_band = rm + rstd * 2
+    lower_band = rm - rstd * 2
+    return upper_band, lower_band
 
 def symbol_to_path(symbol, base_dir="data"):
     """ Return CSV file path given ticker symbol."""
@@ -24,24 +30,33 @@ def get_data(symbols, dates):
 
     return df
 
-def plot_data(df, title="Stock prices"):
-    '''Plot stock prices'''
-    ax = df.plot(title=title, fontsize=18)
+def plot_data(df, rm, upper_band, lower_band):
+    ax = df['SPY'].plot(title="Bollinger Bands", label="SPY")
+    rm.plot(label='Rolling mean', ax=ax)
+    upper_band.plot(label='upper band', ax=ax)
+    lower_band.plot(label='lower band', ax=ax)
     ax.set_xlabel("Date")
     ax.set_ylabel("Price")
-    plt.show() # must be called to show plots in some environments
+    ax.legend(loc='upper left')
+    plt.show()
 
 def test_run():
-    # Define a date range
+    # Read data
     dates = pd.date_range('2010-01-01', '2010-12-31')
-
-    # Choose stock symbols to read
-    symbols = ['GOOG', 'IBM', 'GLD'] # SPY will be added in get_data()
-
-    # Get stock data
+    symbols = ['SPY']
     df = get_data(symbols, dates)
 
-    plot_data(df, "Stock Prices")
+    # Compute rolling mean using a 20-day window
+    rm_SPY = pd.rolling_mean(df['SPY'], window=20)
+
+    # Compute rolling standard deviation
+    rstd_SPY = pd.rolling_std(df['SPY'], window=20)
+
+    # Compute upper and lower bands
+    upper_band, lower_band = get_bollinger_bands(rm_SPY, rstd_SPY)
+
+    # Plot data
+    plot_data(df, rm_SPY, upper_band, lower_band)
 
 if __name__ == "__main__":
     test_run()

@@ -1,6 +1,6 @@
 import os
-import pandas as pd
 import matplotlib.pyplot as plt
+import pandas as pd
 
 def symbol_to_path(symbol, base_dir="data"):
     """ Return CSV file path given ticker symbol."""
@@ -24,24 +24,34 @@ def get_data(symbols, dates):
 
     return df
 
-def plot_data(df, title="Stock prices"):
-    '''Plot stock prices'''
-    ax = df.plot(title=title, fontsize=18)
-    ax.set_xlabel("Date")
-    ax.set_ylabel("Price")
-    plt.show() # must be called to show plots in some environments
+def compute_daily_returns(df):
+    '''Compute and return the daily return values.'''
+    daily_returns = df.copy() # copy given DataFrame to match size and column names
+    # Compute daily returns for row 1 onwards
+    daily_returns[1:] = (df[1:] / df[:-1].values) - 1
+    daily_returns.ix[0, :] = 0 # set daily returns for row 0 to 0
+    # using Pandas
+    # daily_returns = (df / df.shift(1)) - 1
+    # daily_returns.ix[0, :] = 0 # Pandas leaves the 0th row full of NaNs
+    return daily_returns
+
+def plot_data(df, title="Stock prices", xlabel="Date", ylabel="Price"):
+    ax = df.plot(title=title, fontsize=12)
+    ax.set_xlabel(xlabel)
+    ax.set_ylabel(ylabel)
+    plt.show()
+
 
 def test_run():
-    # Define a date range
-    dates = pd.date_range('2010-01-01', '2010-12-31')
-
-    # Choose stock symbols to read
-    symbols = ['GOOG', 'IBM', 'GLD'] # SPY will be added in get_data()
-
-    # Get stock data
+    # Read data
+    dates = pd.date_range('2010-07-01', '2010-07-31')
+    symbols = ['SPY', 'XOM']
     df = get_data(symbols, dates)
+    plot_data(df)
 
-    plot_data(df, "Stock Prices")
+    # Compute daily returns
+    daily_returns = compute_daily_returns(df)
+    plot_data(daily_returns, title="Daily returns", ylabel="Daily returns")
 
 if __name__ == "__main__":
     test_run()
